@@ -7,12 +7,20 @@ const serviceAccount = require("./todo-app-27d58-firebase-adminsdk-fbsvc-cd5741c
 
 const app = express();
 
-app.use(require("cors")());
-app.use(require("express").json());
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://superlative-melba-729982.netlify.app", // schimbă dacă ai alt domeniu netlify
+];
 
-app.get("/health", (req, res) => {
-  res.status(200).send("ok");
-});
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type"],
+}));
+
+app.use(express.json());
+
+app.get("/health", (req, res) => res.status(200).send("ok"));
 
 // conectare firebase
 admin.initializeApp({
@@ -209,6 +217,7 @@ app.patch("/tasks/:id/dueDate", async (req, res) => {
 
 const PORT = process.env.PORT || 5050;
 
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log("the server is running on port", PORT);
 });
+

@@ -3,7 +3,7 @@ import axios from "axios";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
 
-const API = "http://localhost:5050";
+const API = import.meta.env.VITE_API_URL || "http://localhost:5050";
 
 const FILTERS = [
   { key: "all", label: "All" },

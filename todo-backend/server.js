@@ -7,6 +7,13 @@ const serviceAccount = require("./todo-app-27d58-firebase-adminsdk-fbsvc-cd5741c
 
 const app = express();
 
+app.use(require("cors")());
+app.use(require("express").json());
+
+app.get("/health", (req, res) => {
+  res.status(200).send("ok");
+});
+
 // conectare firebase
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),

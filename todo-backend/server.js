@@ -3,7 +3,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const admin = require("firebase-admin");
-const serviceAccount = require("./todo-app-27d58-firebase-adminsdk-fbsvc-cd5741c8e6.json");
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 const app = express();
 

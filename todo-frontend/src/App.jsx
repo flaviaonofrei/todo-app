@@ -3,8 +3,10 @@ import axios from "axios";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
 
+// API base: din Netlify (prod) sau fallback local (dev)
 const API = import.meta.env.VITE_API_URL || "http://localhost:5050";
 
+// Filtre disponibile în UI (prioritate)
 const FILTERS = [
   { key: "all", label: "All" },
   { key: "critical", label: "Critical" },
@@ -13,6 +15,7 @@ const FILTERS = [
   { key: "low", label: "Low" },
 ];
 
+// Clase Tailwind pentru stilizarea filtrelor (buton/badge)
 const FILTER_CLASS = {
   all: "border-zinc-700 text-zinc-200",
   critical: "border-red-500/40 text-red-300",
@@ -22,19 +25,24 @@ const FILTER_CLASS = {
 };
 
 export default function App() {
+  // State pentru TaskForm
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState("medium");
   const [dueDate, setDueDate] = useState(""); // yyyy-mm-dd din input
 
+  // State pentru lista + UX
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
+  // State pentru editare inline
   const [editingId, setEditingId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
 
+  // Filtru activ (prioritate)
   const [filterPriority, setFilterPriority] = useState("all");
 
+  // Fetch inițial: încarcă task-urile la montare
   useEffect(() => {
     const fetchTasks = async () => {
       const res = await axios.get(`${API}/tasks`);
@@ -43,14 +51,16 @@ export default function App() {
     fetchTasks();
   }, []);
 
+  // Lista afișată în UI, filtrată după prioritate
   const filteredTasks = useMemo(() => {
-  let list = filterPriority === "all"
-    ? [...tasks]
-    : tasks.filter((t) => (t.priority || "medium") === filterPriority);
-  return list;
-}, [tasks, filterPriority]);
+    let list =
+      filterPriority === "all"
+        ? [...tasks]
+        : tasks.filter((t) => (t.priority || "medium") === filterPriority);
+    return list;
+  }, [tasks, filterPriority]);
 
-
+  // Creează task nou (POST) + îl adaugă local în listă
   const addTask = async () => {
     try {
       setErr("");
@@ -79,17 +89,20 @@ export default function App() {
     }
   };
 
+  // Inițiază modul de editare pentru un task
   const startEdit = (task) => {
     setErr("");
     setEditingId(task.id);
     setEditingTitle(task.title);
   };
 
+  // Ieșire din editare fără salvare
   const cancelEdit = () => {
     setEditingId(null);
     setEditingTitle("");
   };
 
+  // Salvează titlul (optimistic UI + PATCH backend)
   const saveEdit = async (id) => {
     const trimmed = editingTitle.trim();
     if (!trimmed) return setErr("Titlul nu poate fi gol.");
@@ -102,26 +115,30 @@ export default function App() {
     cancelEdit();
   };
 
+  // Toggle completed (optimistic UI + PATCH backend)
   const toggleCompleted = async (id, completed) => {
     setTasks((prev) =>
       prev.map((x) => (x.id === id ? { ...x, completed } : x))
     );
     await axios.patch(`${API}/tasks/${id}`, { completed });
   };
+
+  // Actualizează dueDate (optimistic UI + PATCH backend)
   const updateDueDate = async (id, dueDateISO) => {
-  setTasks((prev) =>
-    prev.map((t) => (t.id === id ? { ...t, dueDate: dueDateISO } : t))
-  );
+    setTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, dueDate: dueDateISO } : t))
+    );
 
-  try {
-    await axios.patch(`${API}/tasks/${id}/dueDate`, {
-      dueDate: dueDateISO,
-    });
-  } catch (e) {
-    setErr(e?.response?.data?.error || "Failed to update due date.");
-  }
-};
+    try {
+      await axios.patch(`${API}/tasks/${id}/dueDate`, {
+        dueDate: dueDateISO,
+      });
+    } catch (e) {
+      setErr(e?.response?.data?.error || "Failed to update due date.");
+    }
+  };
 
+  // Șterge task (cu confirmare dacă nu e completed)
   const removeTask = async (task) => {
     if (!task.completed) {
       const ok = window.confirm("Are you sure you want to delete the task?");
@@ -159,7 +176,7 @@ export default function App() {
 
         <div className="mt-8">
           <h2 className="text-lg font-semibold">Your agenda</h2>
-          {/* ✅ trimitem filteredTasks */}
+
           <TaskList
             tasks={filteredTasks}
             filterPriority={filterPriority}

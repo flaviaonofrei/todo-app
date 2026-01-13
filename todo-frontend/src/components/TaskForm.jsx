@@ -1,3 +1,4 @@
+// Configurația opțiunilor de prioritate (cheie, etichetă și stil)
 const PRIORITIES = [
   { key: "critical", label: "Critical", cls: "border-red-500/40 text-red-300" },
   { key: "high", label: "High", cls: "border-orange-500/40 text-orange-300" },
@@ -17,7 +18,7 @@ export default function TaskForm({
 }) {
   return (
     <div className="mt-7 rounded-2xl border border-zinc-900 bg-zinc-950 p-5">
-      {/* Rând 1: input + buton */}
+      {/* Input pentru titlu + butonul de adăugare */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <input
           className="w-full flex-1 rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3 text-sm outline-none placeholder:text-zinc-500 focus:border-zinc-600"
@@ -26,7 +27,7 @@ export default function TaskForm({
           placeholder="Add a task..."
           maxLength={100}
           onKeyDown={(e) => {
-            if (e.key === "Enter") addTask();
+            if (e.key === "Enter") addTask(); // shortcut de tastatură
           }}
         />
 
@@ -39,8 +40,9 @@ export default function TaskForm({
         </button>
       </div>
 
-      {/* Rând 2: priority + due date */}
+      {/* Selectarea priorității + due date */}
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+        {/* Butoane de selectare a priorității */}
         <div className="flex flex-wrap gap-2">
           {PRIORITIES.map((p) => (
             <button
@@ -49,7 +51,7 @@ export default function TaskForm({
               onClick={() => setPriority(p.key)}
               className={`rounded-full border px-3 py-2 text-xs transition ${
                 priority === p.key
-                  ? `${p.cls} bg-white/10`
+                  ? `${p.cls} bg-white/10` // prioritate selectată
                   : "border-zinc-800 text-zinc-400 hover:border-zinc-600"
               }`}
               title={`Priority: ${p.label}`}
@@ -59,6 +61,7 @@ export default function TaskForm({
           ))}
         </div>
 
+        {/* Input pentru termen limită */}
         <div className="flex items-center justify-between gap-3 sm:justify-end">
           <span className="text-xs text-zinc-500">Due date</span>
           <input

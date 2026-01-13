@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FaPencilAlt, FaTrashAlt } from "react-icons/fa";
 
+// Etichete afișate pentru fiecare prioritate
 const PRIORITY_LABEL = {
   critical: "Critical",
   high: "High",
@@ -8,6 +9,7 @@ const PRIORITY_LABEL = {
   low: "Low",
 };
 
+// Clase Tailwind pentru badge-ul de prioritate
 const PRIORITY_CLASS = {
   critical: "bg-red-500/15 text-red-300 border-red-500/30",
   high: "bg-orange-500/15 text-orange-300 border-orange-500/30",
@@ -15,6 +17,7 @@ const PRIORITY_CLASS = {
   low: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
 };
 
+// Transformă un ISO date într-un format compatibil cu <input type="date">
 function isoToInputValue(iso) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -22,6 +25,7 @@ function isoToInputValue(iso) {
   return d.toISOString().slice(0, 10);
 }
 
+// Transformă valoarea din input date într-un ISO date pentru backend
 function inputValueToISO(value) {
   if (!value) return null;
   const d = new Date(value);
@@ -41,30 +45,36 @@ export default function TaskItem({
   removeTask,
   updateDueDate,
 }) {
+  // Verifică dacă acest task este în modul de editare a titlului
   const isEditingTitle = editingId === task.id;
   const priorityKey = (task.priority || "medium").toLowerCase();
 
+  // State local pentru editarea due date
   const [isEditingDue, setIsEditingDue] = useState(false);
   const [dueInput, setDueInput] = useState(isoToInputValue(task.dueDate));
 
   const hasDue = !!task.dueDate;
 
+  // Deschide editorul de due date cu valoarea curentă
   const openDueEditor = () => {
     setDueInput(isoToInputValue(task.dueDate));
     setIsEditingDue(true);
   };
 
+  // Anulează editarea due date
   const cancelDueEditor = () => {
     setDueInput(isoToInputValue(task.dueDate));
     setIsEditingDue(false);
   };
 
+  // Salvează noul due date în backend
   const saveDueEditor = async () => {
     const iso = inputValueToISO(dueInput);
     await updateDueDate(task.id, iso);
     setIsEditingDue(false);
   };
 
+  // Elimină complet due date
   const clearDueDate = async () => {
     await updateDueDate(task.id, null);
     setDueInput("");
@@ -73,6 +83,7 @@ export default function TaskItem({
 
   return (
     <li className={`flex items-center gap-3 px-4 py-3 ${task.completed ? "opacity-60" : ""}`}>
+      {/* Toggle completed */}
       <input
         type="checkbox"
         checked={task.completed}
@@ -81,6 +92,7 @@ export default function TaskItem({
       />
 
       {isEditingTitle ? (
+        // Input pentru editarea titlului
         <input
           value={editingTitle}
           onChange={(e) => setEditingTitle(e.target.value)}
@@ -97,14 +109,13 @@ export default function TaskItem({
             {task.title}
           </p>
 
-          {/* AICI e schimbarea: flex-col, Due date sub status */}
           <div className="mt-1 flex flex-col gap-1">
-            {/* status */}
+            {/* Status */}
             <span className="text-xs text-zinc-500">
               {task.completed ? "completed" : "pending"}
             </span>
 
-            {/* due date SUB status */}
+            {/* Vizualizare / editare due date */}
             {!isEditingDue ? (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-zinc-500">
@@ -157,7 +168,7 @@ export default function TaskItem({
               </div>
             )}
 
-            {/* priority pe rând separat (mai estetic) */}
+            {/* Badge-ul de prioritate */}
             <span
               className={`mt-1 inline-flex w-fit items-center rounded-full border px-2 py-0.5 text-xs ${
                 PRIORITY_CLASS[priorityKey] || PRIORITY_CLASS.medium
@@ -170,6 +181,7 @@ export default function TaskItem({
         </div>
       )}
 
+      {/* Butoane de acțiune (edit / delete) */}
       {isEditingTitle ? (
         <div className="ml-auto flex items-center gap-2">
           <button

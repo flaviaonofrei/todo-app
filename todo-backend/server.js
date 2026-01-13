@@ -1,26 +1,47 @@
-const express = require("express");
-const cors = require("cors");
-require("dotenv").config();
+// ===============================
+// 1. IMPORTURI & CONFIGURARE DE BAZĂ
+// ===============================
 
-const admin = require("firebase-admin");
+const express = require("express");        // Framework pentru server HTTP
+const cors = require("cors");              // Permite accesul frontend-ului (CORS)
+require("dotenv").config();                // Încarcă variabilele din .env
+
+const admin = require("firebase-admin");   // SDK pentru Firebase Admin
+
+// Luăm cheia Firebase din variabila de mediu (Render / Railway / etc)
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
-const app = express();
+const app = express();                     // Inițializăm serverul Express
 
+
+// ===============================
+// 2. CONFIGURARE CORS (securitate)
+// ===============================
+
+// Domeniile care au voie să apeleze acest backend
 const allowedOrigins = [
-  "http://localhost:5173",
-  "https://superlative-melba-729982.netlify.app", // schimbă dacă ai alt domeniu netlify
+  "http://localhost:5173",                       // Frontend local
+  "https://superlative-melba-729982.netlify.app" // Frontend din producție (Netlify)
 ];
 
+// Middleware CORS: blochează orice request din alte domenii
 app.use(cors({
   origin: allowedOrigins,
   methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type"],
 }));
 
+// Permite serverului să citească JSON din request body
 app.use(express.json());
 
+
+// ===============================
+// 3. HEALTH CHECK (monitorizare)
+// ===============================
+
+// Endpoint folosit de Render ca să verifice dacă serverul este pornit
 app.get("/health", (req, res) => res.status(200).send("ok"));
+
 
 // conectare firebase
 admin.initializeApp({
@@ -31,16 +52,19 @@ if (serviceAccount.private_key) {
   serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
 }
 
-
+// referinta catre baza de date firestore
 const db = admin.firestore();
 
 app.use(cors());
 app.use(express.json());
 
 // -------------------- CONSTANTE / HELPERS --------------------
+// prioritatile taskurile (gradul de importanta)
 const ALLOWED_PRIORITIES = ["critical", "high", "medium", "low"];
-const MAX_TITLE_LEN = 100;
+const MAX_TITLE_LEN = 100; // maxim 100 de caractere pt titlu
 
+
+// validare titlu pt un task
 function validateTitle(title) {
   if (!title || title.trim() === "") {
     return { ok: false, error: "Title is required" };
@@ -51,7 +75,7 @@ function validateTitle(title) {
   }
   return { ok: true, value: trimmed };
 }
-
+// validare prioritate
 function validatePriority(priority) {
   const p = (priority || "medium").toLowerCase();
   if (!ALLOWED_PRIORITIES.includes(p)) {
@@ -67,7 +91,7 @@ app.get("/", (req, res) => {
   res.send("api todo app is running");
 });
 
-// GET - lista task-uri
+// GET - lista task-uri - returneaza toate task-urile existente in bd
 app.get("/tasks", async (req, res) => {
   try {
     const snapshot = await db.collection("tasks").orderBy("createdAt", "desc").get();
@@ -84,7 +108,7 @@ app.get("/tasks", async (req, res) => {
   }
 });
 
-// POST - adauga task
+// POST - creeaza un task nou
 app.post("/tasks", async (req, res) => {
   try {
     const { title, priority, dueDate } = req.body;
@@ -124,7 +148,7 @@ app.post("/tasks", async (req, res) => {
   }
 });
 
-// PATCH - update task completed
+// PATCH - update task completed - marcheaza ca si finalizat task ul
 app.patch("/tasks/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -143,7 +167,7 @@ app.patch("/tasks/:id", async (req, res) => {
   }
 });
 
-// PATCH - update task title
+// PATCH - update task title - schimba titlul (edit)
 app.patch("/tasks/:id/title", async (req, res) => {
   try {
     const { id } = req.params;
@@ -163,7 +187,7 @@ app.patch("/tasks/:id/title", async (req, res) => {
   }
 });
 
-// PATCH - update prioritate task
+// PATCH - update prioritate task (schimba prioritatea taskului)
 app.patch("/tasks/:id/priority", async (req, res) => {
   try {
     const { id } = req.params;
@@ -195,7 +219,7 @@ app.delete("/tasks/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to delete task" });
   }
 });
-
+// schimba deadline ul task-ului
 app.patch("/tasks/:id/dueDate", async (req, res) => {
   try {
     const { id } = req.params;
@@ -219,7 +243,7 @@ app.patch("/tasks/:id/dueDate", async (req, res) => {
   }
 });
 
-
+// --- pornire server - 0.0.0.0 necesar pentru Render (app ul de deploy al aplicatiei backend)
 const PORT = process.env.PORT || 5050;
 
 app.listen(PORT, "0.0.0.0", () => {
